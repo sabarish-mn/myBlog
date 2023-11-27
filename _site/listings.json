@@ -1,0 +1,10 @@
+[
+  {
+    "listing": "/index.html",
+    "items": [
+      "/posts/regression/index.html",
+      "/posts/clustering/index.html",
+      "/posts/random-variables/index.html"
+    ]
+  }
+]

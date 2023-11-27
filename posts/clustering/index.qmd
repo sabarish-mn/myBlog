@@ -1,0 +1,106 @@
+---
+title: "K Means Clustering"
+author: "Sabarish Muthumani Narayanasamy"
+date: "2023-11-10"
+categories: [code, analysis]
+jupyter: python3
+image: "image.jpg"
+---
+
+**Blog 1 – Clustering**
+
+_The aim of this problem is to segment the clients of a wholesale distributor based on their annual spending on diverse product categories, like milk, grocery, region, etc._
+
+This is a post with executable code.
+
+We will first import the required libraries:
+```{python}
+# importing required libraries
+import logging
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+from sklearn.cluster import KMeans
+
+logging.getLogger('sklearn').setLevel(logging.WARNING)
+```
+
+Next, let’s read the data and look at the first five rows:
+```{python}
+data=pd.read_csv("customer_data.csv")
+data.head()
+```
+
+Here, we see that there is a lot of variation in the magnitude of the data. Variables like Channel and Region have low magnitude, whereas variables like Fresh, Milk, Grocery, etc., have a higher magnitude.
+
+Since K-Means is a distance-based algorithm, this difference in magnitude can create a problem.
+_Bring all the variables to the same magnitude_
+```{python}
+# standardizing the data
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+data_scaled = scaler.fit_transform(data)
+
+# statistics of scaled data
+pd.DataFrame(data_scaled).describe()
+```
+
+Create a kmeans function and fit it on the data
+
+```{python}
+# defining the kmeans function with initialization as k-means++
+kmeans = KMeans(n_clusters=2, init='k-means++')
+
+# fitting the k means algorithm on scaled data
+kmeans.fit(data_scaled)
+```
+
+Let’s evaluate how well the formed clusters are. To do that, we will calculate the inertia of the clusters:
+```{python}
+# inertia on the fitted data
+kmeans.inertia_
+```
+
+We will store the inertia value of each model and then plot it to visualize the result
+```{python}
+SSE = []
+for cluster in range(1,20):
+    kmeans = KMeans(n_clusters = cluster, init='k-means++')
+    kmeans.fit(data_scaled)
+    SSE.append(kmeans.inertia_)
+
+# converting the results into a dataframe and plotting them
+frame = pd.DataFrame({'Cluster':range(1,20), 'SSE':SSE})
+plt.figure(figsize=(12,6))
+plt.plot(frame['Cluster'], frame['SSE'], marker='o')
+plt.xlabel('Number of clusters')
+plt.ylabel('Inertia')
+```
+
+Looking at the above elbow curve, we can choose any number of clusters between 5 to 8.
+
+Set the number of clusters as 6 and fit the model.
+```{python}
+# k means using 5 clusters and k-means++ initialization
+kmeans = KMeans(n_clusters = 5, init='k-means++')
+kmeans.fit(data_scaled)
+pred = kmeans.predict(data_scaled)
+```
+
+Value count of points in each of the above-formed clusters
+```{python}
+frame = pd.DataFrame(data_scaled)
+frame['cluster'] = pred
+frame['cluster'].value_counts()
+```
+
+So, there are 234 data points belonging to cluster 4 (index 3), 125 points in cluster 2 (index 1), and so on.
+
+Now, lets plot the clusters according to midpoints and differentiate based on colours.
+```{python}
+plt.scatter(data_scaled[:, 2], data_scaled[:, 3], c=pred, s=50, cmap='viridis')
+
+centers = kmeans.cluster_centers_
+plt.scatter(centers[:, 2], centers[:, 4], c='black', s=200, alpha=0.5);
+```

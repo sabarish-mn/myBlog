@@ -1,0 +1,187 @@
+---
+title: "Linear and Non Linear regression"
+author: "Sabarish Muthumani Narayanasamy"
+date: "2023-11-11"
+categories: [code, analysis]
+jupyter: python3
+---
+
+**Blog 2 – Linear and Non Linear regression**
+
+![](thumbnail.jpg)
+
+Since this post doesn't specify an explicit `image`, the first image in the post will be used in the listing page of posts.
+
+Import packages
+```{python}
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings("ignore")
+%matplotlib inline
+```
+
+Load the data
+```{python}
+data = pd.read_csv("housing.csv")
+data.head()
+```
+
+The info function provide the information about the dataset . For example:
+
+1. Missing values(no missing values in our dataset)
+2. datatype(9 of them are floats and 1 is categorical)
+
+```{python}
+data.info()
+```
+
+Pearson correlation : 
+```{python}
+plt.subplots(figsize=(15, 9))
+data_numeric = data.select_dtypes(include=['float64', 'int64'])
+cor = data_numeric.corr()
+sns.heatmap(cor, annot=True, linewidths=.5)
+plt.show()
+```
+
+If we have to select a single variable for the regression analysis then higher possibility is to pick the most correlated feature with the target variable(median_house_value).
+
+- In our case it is the median_income with correlation coefficent of 0.69
+```{python}
+# taking two variables
+data = data.drop(["housing_median_age","households","total_bedrooms","longitude","latitude","total_rooms","population","ocean_proximity"], axis=1)
+data.head()
+```
+
+Using this scatter plot we can infer that if a person has higher median_income then that person may have more expensive house. There is somewhat positive linear relationship between them.
+
+```{python}
+X = data.drop("median_house_value", axis=1)
+y = data["median_house_value"]
+plt.scatter(X, y, alpha=0.5)
+plt.title('Scatter plot')
+plt.xlabel('median_income')
+plt.ylabel('median_house_value')
+plt.show()
+```
+
+#### Split the data
+```{python}
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+```
+
+### Model 1:
+#### Linear regression model
+```{python}
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Model initialization
+regression_model = LinearRegression()
+
+# Fit the data(train the model)
+regression_model.fit(X_train, y_train)
+```
+
+```{python}
+# Predict
+y_predicted = regression_model.predict(X_test)
+
+# model evaluation
+rmse = np.sqrt(mean_squared_error(y_test, y_predicted))
+r2 = r2_score(y_test, y_predicted)
+```
+
+```{python}
+# printing values
+print('Slope:' ,regression_model.coef_)
+print('Intercept:', regression_model.intercept_)
+print('Root mean squared error: ', rmse)
+print('R2 score: ', r2)
+```
+
+Interpretation:
+
+This simple linear regression with single variable (y = mx+b) has
+
+- Slope of the line(m) : [42032.17769894]
+- Intercept (b) : 44320.63
+- R2 score: 0.4466 (For R2 score more is better in the range [0,1])
+- Root mean squared error: 84941.0515 (Lower is better)
+
+#####The plot of simple linear regression :
+```{python}
+# data points
+plt.scatter(X_train, y_train, s=10)
+plt.xlabel('median_income')
+plt.ylabel('median_house_value')
+
+# predicted values
+plt.plot(X_test, y_predicted, color='r')
+plt.show()
+```
+
+<!-- #### Residual plot from linear regression
+```{python}
+residual = y_test - y_predicted
+sns.residplot(x=residual, y=y_predicted, lowess=True, scatter_kws={'alpha': 0.5}, line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8})
+plt.show()
+``` -->
+
+### Model 2:
+Fitting polynomial Regression model
+```{python}
+from sklearn.preprocessing import PolynomialFeatures
+poly_reg = PolynomialFeatures(degree=2)
+X_poly = poly_reg.fit_transform(X_train)
+pol_reg = LinearRegression()
+pol_reg.fit(X_poly, y_train)
+```
+
+```{python}
+def viz_polymonial():
+    plt.scatter(X_train, y_train, color="red")
+    plt.plot(X_train, pol_reg.predict(poly_reg.fit_transform(X_train)))
+    plt.xlabel('median_income')
+    plt.ylabel('median_house_value')
+    plt.show()
+    return
+viz_polymonial()
+```
+
+```{python}
+# Predict
+X_p = poly_reg.fit_transform(X_test)
+y_predicted = pol_reg.predict(X_p)
+
+# model evaluation
+rmse = np.sqrt(mean_squared_error(y_test, y_predicted))
+r2 = r2_score(y_test, y_predicted)
+
+# printing values
+print('Slope:' ,regression_model.coef_)
+print('Intercept:', regression_model.intercept_)
+print('Root mean squared error: ', rmse)
+print('R2 score: ', r2)
+```
+
+Interpretation:
+
+This transformed linear regression with single variable (y = mx+b) has
+
+- Slope of the line(m) : 175550.81
+- Intercept (b) : -129097.46
+- R2 score: 0.4498 (For R2 score more is better in the range [0,1])
+
+- Found R2 score is the best so far. This means that we will keep this ploynomial model with degree 2 as our final and best model(but there is one other thing to consider i.e. simple is better than complex)
+
+Root mean squared error: 84699.9 (Lower is better)
+
+### Comparing the Model
+- Model 1 has R2 score: 0.4466
+- Model 2 has R2 score: 0.44982
+After analyzing the R2 score , My final model will be Model 1 as it is simple and has not worse R2 score as compared to the model 3.
