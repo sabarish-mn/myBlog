@@ -1,15 +1,19 @@
 ---
-title: "K Means Clustering"
+title: "Random Variables"
 author: "Sabarish Muthumani Narayanasamy"
-date: "2023-11-10"
+date: "2023-11-13"
 categories: [code, analysis]
 jupyter: python3
 image: "image.jpg"
 ---
 
-**Blog 1 – Clustering**
+# Blog 3 – Random Variables
 
-_The aim of this problem is to segment the clients of a wholesale distributor based on their annual spending on diverse product categories, like milk, grocery, region, etc._
+## Generating random variables from scratch
+
+### The code and the demo
+
+#### Uniform random generator based on "Linear Congruential Generator"
 
 This is a post with executable code.
 
@@ -22,85 +26,261 @@ import numpy as np
 import matplotlib.pyplot as plt
 %matplotlib inline
 from sklearn.cluster import KMeans
+from collections import Counter
+import time
 
 logging.getLogger('sklearn').setLevel(logging.WARNING)
 ```
 
-Next, let’s read the data and look at the first five rows:
 ```{python}
-data=pd.read_csv("customer_data.csv")
-data.head()
+def pseudo_uniform_bad(mult=5,
+                       mod=11,
+                       seed=1,
+                       size=1):
+    """
+    A bad pseudo random generator with small multipliers and modulus
+    """
+    U = np.zeros(size)
+    x = (seed*mult+1)%mod
+    U[0] = x/mod
+    for i in range(1,size):
+        x = (x*mult+1)%mod
+        U[i] = x/mod
+    return U
 ```
 
-Here, we see that there is a lot of variation in the magnitude of the data. Variables like Channel and Region have low magnitude, whereas variables like Fresh, Milk, Grocery, etc., have a higher magnitude.
-
-Since K-Means is a distance-based algorithm, this difference in magnitude can create a problem.
-_Bring all the variables to the same magnitude_
 ```{python}
-# standardizing the data
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
-data_scaled = scaler.fit_transform(data)
-
-# statistics of scaled data
-pd.DataFrame(data_scaled).describe()
+l=pseudo_uniform_bad(seed=3,size=1000)
+plt.hist(l,bins=20,edgecolor='k')
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.show()
 ```
 
-Create a kmeans function and fit it on the data
 
 ```{python}
-# defining the kmeans function with initialization as k-means++
-kmeans = KMeans(n_clusters=2, init='k-means++')
-
-# fitting the k means algorithm on scaled data
-kmeans.fit(data_scaled)
+def pseudo_uniform_good(mult=16807,
+                        mod=(2**31)-1,
+                        seed=123456789,
+                        size=1):
+    """
+    A reasoanbly good pseudo random generator
+    """
+    U = np.zeros(size)
+    x = (seed*mult+1)%mod
+    U[0] = x/mod
+    for i in range(1,size):
+        x = (x*mult+1)%mod
+        U[i] = x/mod
+    return U
 ```
 
-Let’s evaluate how well the formed clusters are. To do that, we will calculate the inertia of the clusters:
 ```{python}
-# inertia on the fitted data
-kmeans.inertia_
+l=pseudo_uniform_good(size=10000)
+plt.hist(l,bins=20,edgecolor='k')
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.show()
 ```
 
-We will store the inertia value of each model and then plot it to visualize the result
+### Sample picker Distribution
 ```{python}
-SSE = []
-for cluster in range(1,20):
-    kmeans = KMeans(n_clusters = cluster, init='k-means++')
-    kmeans.fit(data_scaled)
-    SSE.append(kmeans.inertia_)
+def sample_pick(lst):
+    """
+    Picks up a random sample from a given list
+    """
+    # Sets seed based on the decimal portion of the current system clock
+    t = time.perf_counter()
+    seed = int(10**9*float(str(t-int(t))[0:]))
+    # Random sample as an index
+    l = len(lst)
+    s = pseudo_uniform(low=0,high=l,seed=seed,size=1)
+    idx = int(s)
+    
+    return (lst[idx])
 
-# converting the results into a dataframe and plotting them
-frame = pd.DataFrame({'Cluster':range(1,20), 'SSE':SSE})
-plt.figure(figsize=(12,6))
-plt.plot(frame['Cluster'], frame['SSE'], marker='o')
-plt.xlabel('Number of clusters')
-plt.ylabel('Inertia')
+def pseudo_uniform(low=0,
+                   high=1,
+                  seed=123456789,
+                  size=1):
+    """
+    Generates uniformly random number between `low` and `high` limits
+    """
+    return low+(high-low)*pseudo_uniform_good(seed=seed,size=size)
+
+dice_faces = ['one','two','three','four','five','six']
 ```
 
-Looking at the above elbow curve, we can choose any number of clusters between 5 to 8.
-
-Set the number of clusters as 6 and fit the model.
 ```{python}
-# k means using 5 clusters and k-means++ initialization
-kmeans = KMeans(n_clusters = 5, init='k-means++')
-kmeans.fit(data_scaled)
-pred = kmeans.predict(data_scaled)
+for _ in range(30):
+    print(sample_pick(dice_faces),end=', ')
 ```
 
-Value count of points in each of the above-formed clusters
 ```{python}
-frame = pd.DataFrame(data_scaled)
-frame['cluster'] = pred
-frame['cluster'].value_counts()
+l = []
+for _ in range(10000):
+    t = time.perf_counter()
+    seed = int(10**9*float(str(t-int(t))[0:]))
+    l.append(float(pseudo_uniform(0,6,seed=seed,size=1)))
+    
+plt.hist(l,bins=20,edgecolor='k')
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.xlim(-1,7)
+plt.show()
 ```
 
-So, there are 234 data points belonging to cluster 4 (index 3), 125 points in cluster 2 (index 1), and so on.
-
-Now, lets plot the clusters according to midpoints and differentiate based on colours.
+### Bernoulli Distribution
 ```{python}
-plt.scatter(data_scaled[:, 2], data_scaled[:, 3], c=pred, s=50, cmap='viridis')
+def pseudo_bernoulli(p=0.5,size=1):
+    """
+    Bernoulli generator from uniform generator
+    """
+    # Sets seed based on the decimal portion of the current system clock
+    t = time.perf_counter()
+    seed = int(10**9*float(str(t-int(t))[0:]))
+    B = pseudo_uniform(seed=seed,size=size)
+    B = (B<=p).astype(int)
+    
+    return B
 
-centers = kmeans.cluster_centers_
-plt.scatter(centers[:, 2], centers[:, 4], c='black', s=200, alpha=0.5);
+l=pseudo_bernoulli(p=0.2,size=1000)
+plt.hist(l,bins=20,edgecolor='k')
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.show()
+```
+
+### Binomial Distribution
+
+```{python}
+def pseudo_binomial(n=100,
+                   p=0.5,
+                   size=1):
+    """
+    Binomial distribution from the Uniform generator
+    """
+    binom = []
+    for _ in range(size):
+        t = time.perf_counter()
+        seed = int(10**9*float(str(t-int(t))[0:]))
+        U = pseudo_uniform(size=n,seed=seed)
+        Y = (U <= p).astype(int)
+        binom.append(np.sum(Y))
+    
+    return binom
+
+
+# 100 loaded coins, each with probability of head 0.75, are flipped 
+# This trial/experiment is repeated for 15 times
+# The number of heads in each experiment are given below
+pseudo_binomial(n=100,p=0.75,size=15)
+```
+
+### Normal Distribution
+```{python}
+def pseudo_normal(mu=0.0,sigma=1.0,size=1):
+    """
+    Generates Normal distribution from the Uniform distribution using Box-Muller transform
+    """
+    # A pair of Uniform distributions
+    t = time.perf_counter()
+    seed1 = int(10**9*float(str(t-int(t))[0:]))
+    U1 = pseudo_uniform(seed=seed1,size=size)
+    t = time.perf_counter()
+    seed2 = int(10**9*float(str(t-int(t))[0:]))
+    U2 = pseudo_uniform(seed=seed2,size=size)
+    # Standard Normal pair
+    Z0 = np.sqrt(-2*np.log(U1))*np.cos(2*np.pi*U2)
+    Z1 = np.sqrt(-2*np.log(U1))*np.sin(2*np.pi*U2)
+    # Scaling
+    Z0 = Z0*sigma+mu
+    
+    return Z0
+
+l1=pseudo_normal(size=10000)
+plt.hist(l1,bins=25,edgecolor='k',alpha=0.5,color='blue')
+l2=pseudo_normal(mu=-3,sigma=2.0,size=10000)
+plt.hist(l2,bins=25,edgecolor='k',alpha=0.5,color='red')
+l3=pseudo_normal(mu=3,sigma=0.5,size=10000)
+plt.hist(l3,bins=25,edgecolor='k',alpha=0.5,color='green')
+
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.legend(["$\mu$:0, $\sigma$:1.0",
+           "$\mu$:-3, $\sigma$:2.0",
+           "$\mu$:3, $\sigma$:0.5"],fontsize=14)
+plt.show()
+```
+
+```{python}
+l=pseudo_normal(size=10000)
+plt.hist(l,bins=25,edgecolor='k')
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.show()
+```
+
+### Exponential Distribution
+
+```{python}
+def pseudo_exp(lamb,size=1):
+    """
+    Generates exponential distribution from the Uniform distribution
+    """
+    t = time.perf_counter()
+    seed = int(10**9*float(str(t-int(t))[0:]))
+    U = pseudo_uniform(size=size,seed=seed)
+    X = -(1/lamb)*(np.log(1-U))
+    
+    return X
+
+l=pseudo_exp(lamb=0.1,size=10000)
+plt.hist(l,bins=20,edgecolor='k')
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.show()
+```
+
+### Poisson Distribution
+```{python}
+def pseudo_poisson(alpha,size=1):
+    """
+    """
+    poisson = []
+    for _ in range(size):
+        t = time.perf_counter()
+        seed = int(10**9*float(str(t-int(t))[0:]))
+        U = pseudo_uniform(seed=seed,size=5*alpha)
+        X,P,i = 0,1,0
+        while P >= np.exp(-alpha):
+            P = U[i]*P
+            X+=1
+            i+=1
+        poisson.append(X)
+    return np.array(poisson)
+
+l1=pseudo_poisson(alpha=5,size=10000)
+l2=pseudo_poisson(alpha=10,size=10000)
+l3=pseudo_poisson(alpha=20,size=10000)
+
+d1=dict(Counter(l1))
+d2=dict(Counter(l2))
+d3=dict(Counter(l3))
+
+k1 = [k for k in d1.keys()]
+v1 = [v for v in d1.values()]
+k2 = [k for k in d2.keys()]
+v2 = [v for v in d2.values()]
+k3 = [k for k in d3.keys()]
+v3 = [v for v in d3.values()]
+
+# Plotting
+plt.scatter(k1,v1,c='blue')
+plt.scatter(k2,v2,c='k')
+plt.scatter(k3,v3,c='green')
+plt.legend(["Rate parameter "+"$\lambda$: "+str(i) for i in (5,10,20)],fontsize=15)
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.show()
 ```

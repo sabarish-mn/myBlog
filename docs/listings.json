@@ -2,9 +2,9 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/random-variables/index.html",
       "/posts/regression/index.html",
-      "/posts/clustering/index.html",
-      "/posts/random-variables/index.html"
+      "/posts/clustering/index.html"
     ]
   }
 ]
