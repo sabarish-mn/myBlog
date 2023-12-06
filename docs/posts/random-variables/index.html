@@ -9,7 +9,7 @@
 <meta name="author" content="Sabarish Muthumani Narayanasamy">
 <meta name="dcterms.date" content="2023-11-13">
 
-<title>myBlog - Random Variables</title>
+<title>Machine learning - Generating Random Variables from Scratch</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -108,7 +108,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
     <a class="navbar-brand" href="../../index.html">
-    <span class="navbar-title">myBlog</span>
+    <span class="navbar-title">Machine learning</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -142,10 +142,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Random Variables</h1>
+      <h1 class="title">Generating Random Variables from Scratch</h1>
                                 <div class="quarto-categories">
-                <div class="quarto-category">code</div>
-                <div class="quarto-category">analysis</div>
+                <div class="quarto-category">Random Variables</div>
               </div>
                   </div>
   </div>
@@ -185,11 +184,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Blog 3 – Random Variables</h1>
 <section id="generating-random-variables-from-scratch" class="level2">
 <h2 class="anchored" data-anchor-id="generating-random-variables-from-scratch">Generating random variables from scratch</h2>
-<section id="the-code-and-the-demo" class="level3">
-<h3 class="anchored" data-anchor-id="the-code-and-the-demo">The code and the demo</h3>
 <section id="uniform-random-generator-based-on-linear-congruential-generator" class="level4">
 <h4 class="anchored" data-anchor-id="uniform-random-generator-based-on-linear-congruential-generator">Uniform random generator based on “Linear Congruential Generator”</h4>
-<p>This is a post with executable code.</p>
 <p>We will first import the required libraries:</p>
 <div class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># importing required libraries</span></span>
@@ -257,7 +253,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-</section>
 <section id="sample-picker-distribution" class="level3">
 <h3 class="anchored" data-anchor-id="sample-picker-distribution">Sample picker Distribution</h3>
 <div class="cell" data-execution_count="6">
@@ -290,11 +285,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">30</span>):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(sample_pick(dice_faces),end<span class="op">=</span><span class="st">', '</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>six, three, five, six, one, one, two, three, three, four, four, five, five, six, six, one, two, two, three, three, four, four, five, five, six, one, one, two, two, three, </code></pre>
+<pre><code>one, one, two, three, three, four, four, five, five, five, six, six, one, one, two, two, two, three, three, four, four, five, five, five, six, six, one, one, two, two, </code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\1321908839.py:11: DeprecationWarning: Conversion of an array with ndim &gt; 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
-  idx = int(s)</code></pre>
+<pre><code>C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_36600\1321908839.py:11: DeprecationWarning:
+
+Conversion of an array with ndim &gt; 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="8">
@@ -310,8 +307,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="op">-</span><span class="dv">1</span>,<span class="dv">7</span>)</span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\3436541096.py:5: DeprecationWarning: Conversion of an array with ndim &gt; 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
-  l.append(float(pseudo_uniform(0,6,seed=seed,size=1)))</code></pre>
+<pre><code>C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_36600\3436541096.py:5: DeprecationWarning:
+
+Conversion of an array with ndim &gt; 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="index_files/figure-html/cell-9-output-2.png" width="594" height="418"></p>
@@ -368,7 +367,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="co"># The number of heads in each experiment are given below</span></span>
 <span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>pseudo_binomial(n<span class="op">=</span><span class="dv">100</span>,p<span class="op">=</span><span class="fl">0.75</span>,size<span class="op">=</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="10">
-<pre><code>[75, 71, 85, 70, 70, 74, 76, 77, 81, 78, 70, 77, 75, 77, 79]</code></pre>
+<pre><code>[67, 75, 67, 76, 74, 72, 75, 73, 81, 74, 80, 75, 75, 77, 76]</code></pre>
 </div>
 </div>
 </section>
@@ -408,21 +407,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>           <span class="st">"$\mu$:3, $\sigma$:0.5"</span>],fontsize<span class="op">=</span><span class="dv">14</span>)</span>
 <span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>&lt;&gt;:29: SyntaxWarning: invalid escape sequence '\m'
-&lt;&gt;:30: SyntaxWarning: invalid escape sequence '\m'
-&lt;&gt;:31: SyntaxWarning: invalid escape sequence '\m'
-&lt;&gt;:29: SyntaxWarning: invalid escape sequence '\m'
-&lt;&gt;:30: SyntaxWarning: invalid escape sequence '\m'
-&lt;&gt;:31: SyntaxWarning: invalid escape sequence '\m'
-C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\1355573055.py:29: SyntaxWarning: invalid escape sequence '\m'
-  plt.legend(["$\mu$:0, $\sigma$:1.0",
-C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\1355573055.py:30: SyntaxWarning: invalid escape sequence '\m'
-  "$\mu$:-3, $\sigma$:2.0",
-C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\1355573055.py:31: SyntaxWarning: invalid escape sequence '\m'
-  "$\mu$:3, $\sigma$:0.5"],fontsize=14)</code></pre>
+<pre><code>&lt;&gt;:29: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+&lt;&gt;:30: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+&lt;&gt;:31: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+&lt;&gt;:29: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+&lt;&gt;:30: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+&lt;&gt;:31: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_36600\1355573055.py:29: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_36600\1355573055.py:30: SyntaxWarning:
+
+invalid escape sequence '\m'
+
+C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_36600\1355573055.py:31: SyntaxWarning:
+
+invalid escape sequence '\m'
+</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="index_files/figure-html/cell-12-output-2.png" width="600" height="418"></p>
+<p><img src="index_files/figure-html/cell-12-output-2.png" width="602" height="418"></p>
 </div>
 </div>
 <div class="cell" data-execution_count="12">
@@ -456,7 +479,7 @@ C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\1355573055.py:31: Syntax
 <span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontsize<span class="op">=</span><span class="dv">15</span>)</span>
 <span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="index_files/figure-html/cell-14-output-1.png" width="600" height="418"></p>
+<p><img src="index_files/figure-html/cell-14-output-1.png" width="617" height="418"></p>
 </div>
 </div>
 </section>
@@ -503,10 +526,18 @@ C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\1355573055.py:31: Syntax
 <span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontsize<span class="op">=</span><span class="dv">15</span>)</span>
 <span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>&lt;&gt;:36: SyntaxWarning: invalid escape sequence '\l'
-&lt;&gt;:36: SyntaxWarning: invalid escape sequence '\l'
-C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_3728\2970150594.py:36: SyntaxWarning: invalid escape sequence '\l'
-  plt.legend(["Rate parameter "+"$\lambda$: "+str(i) for i in (5,10,20)],fontsize=15)</code></pre>
+<pre><code>&lt;&gt;:36: SyntaxWarning:
+
+invalid escape sequence '\l'
+
+&lt;&gt;:36: SyntaxWarning:
+
+invalid escape sequence '\l'
+
+C:\Users\Sabarish M N\AppData\Local\Temp\ipykernel_36600\2970150594.py:36: SyntaxWarning:
+
+invalid escape sequence '\l'
+</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="index_files/figure-html/cell-15-output-2.png" width="600" height="418"></p>

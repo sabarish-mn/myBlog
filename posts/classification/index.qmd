@@ -1,10 +1,10 @@
 ---
-title: "Classification"
+title: "Implementation of Isolation Forest to Detect Outliers in Python (Scikit-learn)"
 author: "Sabarish Muthumani Narayanasamy"
 date: "2023-11-15"
-categories: [code, analysis]
+categories: [Classification]
 jupyter: python3
-image: "image.jpg"
+image: "image.png"
 ---
 
 # Blog 4 – Classification

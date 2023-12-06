@@ -2,15 +2,13 @@
 title: "Linear and Non Linear regression"
 author: "Sabarish Muthumani Narayanasamy"
 date: "2023-11-11"
-categories: [code, analysis]
+categories: [Linear and Non Linear regression]
 jupyter: python3
+image: "thumbnail.jpg"
 ---
 
-**Blog 2 – Linear and Non Linear regression**
-
-![](thumbnail.jpg)
-
-Since this post doesn't specify an explicit `image`, the first image in the post will be used in the listing page of posts.
+<!-- **Blog 2 – Linear and Non Linear regression** -->
+# Blog 2 - Linear and Non Linear regression
 
 Import packages
 ```{python}

@@ -1,13 +1,13 @@
 ---
-title: "K Means Clustering"
+title: "Segment the Clients of a Wholesale Distributor"
 author: "Sabarish Muthumani Narayanasamy"
 date: "2023-11-10"
-categories: [code, analysis]
+categories: [Clustering]
 jupyter: python3
-image: "image.jpg"
+image: "image.png"
 ---
 
-**Blog 1 – Clustering**
+# Blog 1 – Clustering
 
 _The aim of this problem is to segment the clients of a wholesale distributor based on their annual spending on diverse product categories, like milk, grocery, region, etc._
 

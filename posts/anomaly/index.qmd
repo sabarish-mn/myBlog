@@ -2,7 +2,7 @@
 title: "Implementation of Isolation Forest to Detect Outliers in Python (Scikit-learn)"
 author: "Sabarish Muthumani Narayanasamy"
 date: "2023-11-18"
-categories: [code, analysis]
+categories: [Anomaly/outlier detection]
 jupyter: python3
 image: "image.jpg"
 ---
