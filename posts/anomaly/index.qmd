@@ -1,0 +1,310 @@
+---
+title: "Implementation of Isolation Forest to Detect Outliers in Python (Scikit-learn)"
+author: "Sabarish Muthumani Narayanasamy"
+date: "2023-11-18"
+categories: [code, analysis]
+jupyter: python3
+image: "image.jpg"
+---
+# Blog 5 – Anomaly/outlier detection
+### 1. Preparation
+#### 1.1. Input data
+The data "sample_detect_outliers.csv" contains US public firms' features that are related to leases.
+
+#### 1.2. Output data
+The following lines of code will output an indicator variable that equals 1 if the firm (e.g., observation) is an outlier and 0 otherwise. For more details on the steps after we identify outliers.
+
+#### 1.3. Feature (i.e., variable) definition
+- lag_lease: prior year's lease activity
+- lag_market_value: prior year's market capitalization of the stock
+- lag_dividend: an indicator value that equals 1 if the company paid any dividends in the prior, and 0 otherwise
+- lag_loss: an indicator value that equals 1 if the company reported negative profits in the prior year
+- lag_cash: prior year's cash balance
+- lag_tax_rate: effective tax rate in the prior year
+- lag_big4_auditor: an indicator value that equals 1 if the company hired a Big 4 auditor in the prior year
+
+#### 1.4. Import libraries and the data set
+```{python}
+# Import libraries
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import plotly.express as px
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+```
+
+```{python}
+# Import the data set
+sample_with_outliers = pd.read_csv('sample_detect_outliers.csv')
+```
+
+### 2. Conduct an Exploratory Data Analysis (EDA)
+#### 2.1. Show the first 5 entries in the data
+```{python}
+# First 5 entries
+sample_with_outliers.head()
+```
+
+#### 2.2. The # of entries and the # of features
+There are 6,279 entries and 9 variables = 1 identifier + 1 label (i.e., outcome variable) + 7 firm features. The second variable, lease, is the label.
+
+```{python}
+# (Number of entries, Number of features)
+print(sample_with_outliers.shape)
+```
+
+#### 2.3. Empirical distributions and histograms
+There are many interesting observations that are worth noting. First, there are no missing values as indicated by counts that all equal 6,279.
+```{python}
+# Show empirical distributions
+sample_with_outliers.describe()
+```
+
+```{python}
+# Show histograms - all variables except for the identifier
+sample_z = sample_with_outliers.drop(columns='identifier')
+sample_z.hist(bins = 20, figsize =(20, 10))
+plt.show()
+```
+
+#### 2.4. Drop variables without outliers
+The above two panels show that lag_loss and lag_big4_auditor are indicator variables and thus do not have outliers.
+
+In addition, the histogram suggests that lag_tax_rate also does not have outliers. During the sample period (2016-2019), the corporate tax rate was reduced from 35% to 21%. Two big spikes in the histogram around 35% and 21% and all other values smaller than 35% make economic sense.
+
+```{python}
+# Drop identifier, lag_loss, lag_big4_auditor, and lag_tax_rate 
+var = ['identifier', 'lag_loss', 'lag_big4_auditor', 'lag_tax_rate']
+sample_z = sample_with_outliers.drop(columns=var)
+```
+
+### 3. Z-Score - Detect and Remove Outliers
+Before implementing Isolation Forest, we will first attempt to detect outliers using the Z-score method.
+
+As indicated in a previous section, the Z-Score method is effective in addressing outliers for data points that follow a normal distribution.
+
+I am going to assume that observations with a Z-score below -2.5 or above 2.5 (i.e., 2.5 standard deviations away from the mean; 1% of the sample) are outliers.
+
+#### 3.1. lag_market_value - Identify and remove outliers
+The histogram above shows that lag_market_value follows a normal distribution. To detect outliers, we first write a function to print the upper limits and lower limits of the Z-Score.
+
+```{python}
+# Create a function to report the limits of the Z-Score
+def print_z_score_limits (df, column_name):
+    """ Print the upper and lower limits of the Z-score """
+    
+    # Compute the limits
+    upper_limit = df[column_name].mean() + 3 * df[column_name].std()
+    lower_limit = df[column_name].mean() - 3 * df[column_name].std()
+    
+    # Round and return the limits
+    upper_limit = round(upper_limit, 2)
+    lower_limit = round(lower_limit, 2)
+    print_this = "Variable Name: " + column_name + " | Upper limit: " + str(upper_limit) + " | Lower limit: " + str(lower_limit)
+    return(print_this)
+```
+
+```{python}
+# Print the upper and lower limits
+print_z_score_limits(sample_z, "lag_market_value")
+```
+It turns out that all of the values (N=6,279) are within the boundary values of 2.43 and 12.82. Thus, none of the observations are trimmed.
+
+```{python}
+# Filter outliers
+sample_z = sample_z[(sample_z['lag_market_value'] >= 2.43) | (sample_z['lag_market_value'] <= 12.82)]
+print(sample_z.shape)
+```
+
+I'll drop lag_market_value since an outlier treatment is not necessary for this feature.
+
+```{python}
+# Drop lag_market_value
+sample_z = sample_z.drop(columns=['lag_market_value'])
+```
+
+#### 3.2. Log transformation of other variables
+Going back to the histogram above, we can see that lease, lag_lease, lag_dividend, and lag_cash are all significantly right-skewed. In this case, the Z-Score method or many other popular outlier detection methods such as the Interquartile Range (IQR) method won't do any good. To address this issue, I conduct log transformations on these variables to see if we can describe them with normal distribution.
+
+The histogram also shows that the four variables have many zeros (or very small values), which make economic sense. Therefore, I will only look for outliers on the right-hand side of the distribution.
+
+First, we will replace zeros with NaNs. This is okay because zeros will not be considered outliers.
+
+```{python}
+# Replace zeros with NaNs
+sample_z['lag_dividend'] = sample_z['lag_dividend'].replace([0],np.NaN)
+sample_z['lease'] = sample_z['lease'].replace([0],np.NaN)
+```
+
+Next, I perform the log transformations and plot histograms
+
+```{python}
+# Create a function to conduct log transformation
+def log_transformation_function (df, column_name):
+    """ Conduct a log transformation of a variable """
+    # Replace the values with log-transformed values
+    df[[column_name]] = df[[column_name]].apply(np.log)
+
+# Conduct log transformation on all the variables
+for column in sample_z:
+    log_transformation_function(sample_z, column)   
+    
+# Plot histograms
+sample_z.hist(bins = 20, figsize =(20, 10))
+plt.show()
+```
+
+#### 3.3. Other variables - Identify and remove outliers
+The distributions now look much more like normal distributions. Once again, we will use the Z-Score to identify outliers.
+
+First, we report the Z-Score upper limits for each variable.
+
+```{python}
+# Print the upper and lower limits
+for column in sample_z:
+    print(print_z_score_limits(sample_z, column))
+```
+
+Next, we report the maximum values of each variable.
+
+```{python}
+# Print the maximum values
+print("MAXIMUM VALUES")
+print(round(sample_z.max(),2))
+```
+
+### 4. Isolation Forest - Multi-dimensional Outlier Detection
+Although the data points do not seem to have outliers at the variable level, there could be outliers at a multi-dimensional level. Therefore, I employ Isolation Forest to detect outliers.
+
+#### 4.1. Setup
+I begin by dropping the identifier from the original sample.
+
+```{python}
+sample_isf = sample_with_outliers.drop(columns='identifier')
+```
+
+#### 4.2. Conduct Principal Component Analysis (PCA)
+We conduct PCA to reduce the firm feature dimensions from 7 to 2. Note that this step is not necessary because Isolation Forest works fine with multi-dimensions. Regardless, we reduce dimensions to visualize the outlier points in my data.
+
+```{python}
+# Standardize features
+sample_scaled = StandardScaler().fit_transform(sample_isf)
+
+# Define dimensions = 2
+pca = PCA(n_components=2)       
+
+# Conduct the PCA
+principal_comp = pca.fit_transform(sample_scaled)     
+
+# Convert to dataframe
+pca_df = pd.DataFrame(data = principal_comp, columns = ['principal_component_1', 'principal_component_2'])
+pca_df.head()
+```
+
+#### 4.3. Train the model and make predictions
+As indicated before, we need to pre-define outlier frequency. After experimenting with data, we decide to use 4%.
+
+```{python}
+# Train the model
+isf = IsolationForest(contamination=0.04)
+isf.fit(pca_df)
+
+# Predictions
+predictions = isf.predict(pca_df)
+```
+
+#### 4.4. Extract predictions and isolation scores
+```{python}
+# Extract scores
+pca_df["iso_forest_scores"] = isf.decision_function(pca_df)
+
+# Extract predictions
+pca_df["iso_forest_outliers"] = predictions
+
+# Describe the dataframe
+pca_df.describe()
+```
+
+Let's replace "-1" with "Yes" and "1" with "No"
+
+```{python}
+# Replace "-1" with "Yes" and "1" with "No"
+pca_df['iso_forest_outliers'] = pca_df['iso_forest_outliers'].replace([-1, 1], ["Yes", "No"])
+
+# Print the first 5 firms
+pca_df.head()
+```
+
+### 4.5. Plots
+Plot the firms in the 2-dimensional space in the following order.
+[1] All firms
+[2] Normal Firms vs. Outlier Firms
+[3] Isolation Forest Scores
+
+```{python}
+# Create a function to plot firms on the 2-dimensional space
+def plot_firms (dataframe, title, color = None):
+    """ Plot firms on the 2-dimensional space """
+    
+    # Generate a scatter plot
+    fig = px.scatter(pca_df, x="principal_component_1", y="principal_component_2", title=title, color=color)
+    
+    # Layout
+    fig.update_layout(
+        font_family='Arial Black',
+        title=dict(font=dict(size=20, color='red')),
+        yaxis=dict(tickfont=dict(size=13, color='black'),
+                   titlefont=dict(size=15, color='black')),
+        xaxis=dict(tickfont=dict(size=13, color='black'),
+                   titlefont=dict(size=15, color='black')),
+        legend=dict(font=dict(size=10, color='black')),
+        plot_bgcolor='white',
+        # showlegend=False # Remove legend, if I want to
+    )
+    
+    ## Hide colorbar (run the following code if I want to)
+    #fig.update_coloraxes(showscale=False)
+    
+    return(fig)
+
+# Need to import renderers to view the plots on GitHub
+import plotly.io as pio
+
+# Plot [1] All firms
+fig = plot_firms(pca_df, "Figure 1: All Firms")
+fig.show()
+```
+
+```{python}
+# [2] Normal Firms vs. Outlier Firms
+fig = plot_firms(dataframe=pca_df, title="Figure 2: Normal Firms vs. Outlier Firms", color='iso_forest_outliers')
+fig.show()
+```
+
+```{python}
+# [3] Isolation Forest Scores
+fig = plot_firms(dataframe=pca_df, title="Figure 3: Isolation Forest Scores", color='iso_forest_scores')
+fig.show()
+```
+
+#### 4.6. Observations
+A few observations are in order.
+
+According to Figure 2, most of the outer points are identified as outliers. These outliers correctly meet the outlier characteristics that they are "distant and few."
+
+### 5. Export and conclude
+```{python}
+# Add identifiers and cluster assignments (labels) to the sample
+pca_df = pd.concat([sample_with_outliers['identifier'], pca_df], axis=1)
+
+# Print the first 5 firms
+pca_df.head()
+```
+
+```{python}
+# Export the sample as a csv file
+pca_df.to_csv('outliers_detected.csv')
+```

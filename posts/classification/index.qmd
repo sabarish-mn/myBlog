@@ -1,0 +1,280 @@
+---
+title: "Classification"
+author: "Sabarish Muthumani Narayanasamy"
+date: "2023-11-15"
+categories: [code, analysis]
+jupyter: python3
+image: "image.jpg"
+---
+
+# Blog 4 – Classification
+
+### Implementation of Isolation Forest to Detect Outliers in Python (Scikit-learn)
+
+```{python}
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+```
+
+### Diabetes and Pima Indian Dataset
+1. Machine learning has become an important approach to many researches today. It is a field of artificial intelligence and its importance is increasing day by day.
+
+2. In this project, a classification model will be made using the Pima Indians Diabetes data set. Diabetes is a group of metabolic disorders in which long-term high blood sugar levels are seen. High blood sugar symptoms include frequent urination, increased thirst, and increased hunger. If left untreated, diabetes can cause many complications. Acute complications may include diabetic ketoacidosis, hyperosmolar hyperglycemic state, or death. Serious long-term complications include cardiovascular disease, stroke, chronic kidney disease, foot ulcer, and eye damage.
+
+3. This dataset was originally from the National Institute of Diabetes and Digestive and Kidney Diseases. The purpose of the dataset is to diagnostically predict whether a patient has diabetes based on the specific diagnostic measures included in the data set. Various restrictions have been imposed on the selection of these samples from a larger database.
+
+4. In particular, all the patients here are women who are at least 21 years old of Pima Indian heritage. The data set consists of 768 observation units and 9 variables. These variables are; pregnancy, glucose, blood pressure, skin thickness, insulin, body mass index, diabetes pedigree, age and outcome. After the exploratory data analysis on the data set is completed, the machine learning model will be set up. For this, supervised learning algorithms will be used.
+
+### Importing Libraries
+```{python}
+import numpy as np 
+import pandas as pd 
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.neighbors import LocalOutlierFactor, KNeighborsClassifier
+import plotly.graph_objs as go
+import plotly.offline as py
+from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, RandomizedSearchCV, RepeatedStratifiedKFold
+from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_curve, roc_auc_score, recall_score, f1_score
+from sklearn.tree import DecisionTreeClassifier
+from lightgbm import LGBMClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.ensemble import RandomForestClassifier
+import missingno as msno
+import warnings
+warnings.filterwarnings("ignore")
+```
+
+### Reading Data
+```{python}
+diabetes = pd.read_csv("diabetes.csv")
+df = diabetes.copy()
+df.head()
+```
+
+```{python}
+df.describe().T
+```
+
+In this dataset missing data are filled with 0. First, we are gonna change zeros with NaN
+```{python}
+df[['Glucose','BloodPressure','SkinThickness','Insulin','BMI']] = df[['Glucose','BloodPressure','SkinThickness',
+                                                                      'Insulin','BMI']].replace(0, np.NaN)
+```
+
+### Data Visualization
+
+#### Histogram
+A histogram is a bar graph representation of a grouped data distribution. In other words, it is the transfer of data consisting of repetitive numbers to the table first, and to the chart by using the table, in other words, the graph of the data groups is displayed in rectangular columns.
+
+```{python}
+df.hist(bins=20,figsize = (15,15));
+```
+
+#### Countplot and PiePlot
+A count plot can be thought of as a histogram across a categorical, instead of quantitative, variable. A Pie Chart is a type of graph that displays data in a circular graph. The pieces of the graph are proportional to the fraction of the whole in each category.
+
+We examined distribution of outcome with countplot and pieplot.
+
+```{python}
+plt.title("Distribution of Outcome")
+sns.countplot(df["Outcome"], saturation=1)
+```
+
+```{python}
+def PlotPie(df, nameOfFeature):
+    labels = [str(df[nameOfFeature].unique()[i]) for i in range(df[nameOfFeature].nunique())]
+    values = [df[nameOfFeature].value_counts()[i] for i in range(df[nameOfFeature].nunique())]
+
+    trace=go.Pie(labels=labels,values=values)
+
+    py.iplot([trace])
+
+PlotPie(df, "Outcome")
+```
+
+#### Correlation
+Correlation is a term that is a measure of the strength of a linear relationship between two quantitative variables.
+
+In this graph, there are correlations of all variables with the Outcome variable.
+
+```{python}
+def corr_to_target(dataframe, target, title=None, file=None):
+    plt.figure(figsize=(4,6))
+    sns.heatmap(dataframe.corr()[[target]].sort_values(target,
+                                                        ascending=False)[1:],
+                                                        annot=True,
+                                                        cmap='coolwarm')
+    
+    plt.title(f'\n{title}\n', fontsize=18)
+    
+    plt.show();
+    
+    return
+
+corr_to_target(df, "Outcome", title="Outcome")
+```
+
+Correlation matrix of variables with each other.
+
+```{python}
+corr_matrix = df.corr()
+sns.clustermap(corr_matrix, annot=True, fmt=".2f")
+plt.title("Correlation Between Features")
+```
+
+### Splitting Train and Test Set
+Above, we first gave all variables except the "outcome" variable to the X variable and gave the variable "outcome" to the y variable. Then we split the data into train and test data. X_train and y_train show the dependent and independent variables to be used to test the model, while X_test and y_test are used to develop the model. Test_size specifies how many% of data (30%) will be used for testing. Random_state is used to see the same distinction every time we run the program. Stratify provides a balanced separation of classes in the y variable when separating.
+
+```{python}
+#y = df["Outcome"]
+#X = df.drop(["Outcome"], axis = 1)
+train,test = train_test_split(df, test_size=0.3, random_state = 2)
+```
+
+```{python}
+train.isnull().sum()
+```
+
+```{python}
+test.isnull().sum()
+```
+
+### Handling with Missing Values
+
+After filling the 0s with the value of NaN, the missing values ​​will be visualized. We use the missingno library for this.
+
+```{python}
+msno.bar(df,figsize=(10,6))
+```
+
+We will fill in each missing value with its median value.
+
+```{python}
+def median_target(dataf, var):   
+    temp = dataf[dataf[var].notnull()]
+    temp = temp[[var, 'Outcome']].groupby(['Outcome'])[[var]].median().reset_index()
+    return temp
+```
+
+```{python}
+columns = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin',
+       'BMI', 'DiabetesPedigreeFunction', 'Age']
+for i in columns:
+    train.loc[(train['Outcome'] == 0 ) & (train[i].isnull()), i] = median_target(train,i)[i][0]
+    train.loc[(train['Outcome'] == 1 ) & (train[i].isnull()), i] = median_target(train,i)[i][1]
+    
+    test.loc[(test['Outcome'] == 0 ) & (test[i].isnull()), i] = median_target(train,i)[i][0]
+    test.loc[(test['Outcome'] == 1 ) & (test[i].isnull()), i] = median_target(train,i)[i][1]
+```
+
+After filling if we examine null values in dataset, we will see there are not any missing values.
+
+```{python}
+print("TRAIN DATA")
+print(train.isnull().sum(), "\n")
+print("TEST DATA")
+print(test.isnull().sum())
+```
+
+### Plotting Roc Curve
+
+ROC curves are frequently used to show in a graphical way the connection/trade-off between clinical sensitivity and specificity for every possible cut-off for a test or a combination of tests. In addition the area under the ROC curve gives an idea about the benefit of using the test(s) in question.
+
+```{python}
+def plot_roc_curve(fpr, tpr, label=None):
+    plt.plot(fpr, tpr, linewidth=2, label=label)
+    plt.plot([0,1],[0,1],"k--")
+    plt.axis([0,1,0,1])
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+```
+
+
+### Machine Learning
+We will use 6 different machine learning algorithm for this model and examine ROC score, accuracy test and train score, best parameters and ROC curve
+
+```{python}
+X_train = train.iloc[:,:8]
+y_train = train.iloc[:,-1:]
+
+X_test = test.iloc[:,:8]
+y_test = test.iloc[:,-1:]
+```
+
+```{python}
+def ml_model(model, parameters):
+    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=10, random_state=1)
+    random_search = RandomizedSearchCV(model, parameters, cv=cv, random_state=1, n_jobs=-1, verbose=1)
+    pipe = make_pipeline(StandardScaler(),random_search)
+    pipe.fit(X_train, y_train)
+    y_pred_proba = pipe.predict_proba(X_test)[:,1]
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+    print("ROC Score : ",roc_auc_score(y_test, y_pred_proba))
+    print("F1 score for train: ", f1_score(y_train, pipe.predict(X_train)))
+    print("F1 score for test: " , f1_score(y_test, pipe.predict(X_test)))
+    print("Best params:" + str(random_search.best_params_))
+    plot_roc_curve(fpr, tpr)
+    
+log_reg_params = {"C" : [1,2,3,0.01,0.001, 2.5, 1.5],
+                  "max_iter" : range(100,800,100)}
+knn_params = {"n_neighbors" : np.arange(1,50),
+              "leaf_size" : np.arange(1,50)}
+decTree_params = {"max_depth" : [5,10,15,20,25,30],
+                  "min_samples_split" : np.arange(2,50),
+                  "min_samples_leaf" : np.arange(1,50)}
+randomForest_params = {"n_estimators" : [100,500, 1000],
+                       "min_samples_split" : np.arange(2,30),
+                       "min_samples_leaf" : np.arange(1,50),
+                       "max_features" : np.arange(1,7)}
+lgbm_params = {"n_estimators" : [100,500,1000],
+               "subsample" : [0.6,0.8,1.0],
+               "max_depth" : [5,10,15,20,25,30],
+               "learning_rate" : [0.1, 0.01, 0.02, 0.5],
+               "min_child_samples" : np.arange(2,30)}
+
+sgd_params = {"alpha" : [0.0001, 0.1, 0.001, 0.01],
+              "max_iter" : [100,500,1000,2000],
+              "loss" : ["log","modified_huber","perceptron"]}
+```
+
+```{python}
+ml_model(LogisticRegression(), log_reg_params)
+```
+
+```{python}
+ml_model(KNeighborsClassifier(), knn_params)
+```
+
+```{python}
+ml_model(DecisionTreeClassifier(), decTree_params)
+```
+
+```{python}
+ml_model(RandomForestClassifier(), randomForest_params)
+```
+
+```{python}
+ml_model(LGBMClassifier(), lgbm_params)
+```
+
+```{python}
+ml_model(SGDClassifier(), sgd_params)
+```
