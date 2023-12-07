@@ -4,12 +4,14 @@ project:
 
 website:
   title: "Machine learning"
+  repo-url: "https://github.com/sabarish-mn/myBlog"
+  repo-actions: [source]
   navbar:
     right:
       - about.qmd
       - icon: github
         href: https://github.com/
-      - icon: twitter
+      - icon: linkedin
         href: https://twitter.com
 format:
   html:

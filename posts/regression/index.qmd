@@ -7,7 +7,6 @@ jupyter: python3
 image: "thumbnail.jpg"
 ---
 
-<!-- **Blog 2 – Linear and Non Linear regression** -->
 # Blog 2 - Linear and Non Linear regression
 
 Import packages
